@@ -23,7 +23,9 @@ jobs:
             #     echo "docker_files=$(ls Docker  | jq  --raw-input .  | jq --slurp .)" >> "$GITHUB_ENV"
             - id: set-matrix
               run: |
-                echo "::set-output name=docker_files::$(ls Docker  | jq  --raw-input .  | jq --slurp .)"
+                DOCKER_FILES=$(ls Docker  | jq  --raw-input .  | jq --slurp -c .)
+                echo $DOCKER_FILES
+                echo "::set-output name=docker_files::$DOCKER_FILES"
         outputs:
             docker_files: ${{steps.set-matrix.outputs.docker_files}}
     
