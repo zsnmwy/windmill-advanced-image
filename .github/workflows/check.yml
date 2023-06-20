@@ -36,15 +36,14 @@ jobs:
         run: |
           skopeo list-tags docker://ghcr.io/windmill-labs/windmill | tee windmill-tags.json
           
-      - name: Add changes to Git tracking
-        run: |
-          git add -A .
-          git config --global user.name "robot"
-          git config --global user.email "robot@github.com"
-          git commit -m "Update windmill-tags.json"
-
-      - name: Push changes
-        uses: ad-m/github-push-action@master
+      - name: Git Commit Push Action
+        # You may pin to the exact commit or the version.
+        # uses: GuillaumeFalourd/git-commit-push@205c043bca2f932f7a48a28a8d619ba30eb84baf
+        uses: GuillaumeFalourd/git-commit-push@v1.3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          branch: master
+          # Commit message
+          commit_message: Update windmill-tags.json # default is Commit performed using Push and Commit action
+          # Branch to push the changes back to
+          target_branch: master
+          # Files to add separated by space
+          files: .
