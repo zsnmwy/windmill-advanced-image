@@ -18,9 +18,9 @@ jobs:
         steps:
             - name: Checkout
               uses: actions/checkout@v3
-            - name: Setup matrix
-              run: |
-                echo "docker_files=$(ls Docker  | jq  --raw-input .  | jq --slurp .)" >> "$GITHUB_ENV"
+            # - name: Setup matrix
+            #   run: |
+            #     echo "docker_files=$(ls Docker  | jq  --raw-input .  | jq --slurp .)" >> "$GITHUB_ENV"
             - id: set-matrix
               run: |
                 echo "::set-output name=docker_files::$(ls Docker  | jq  --raw-input .  | jq --slurp .)"
