@@ -2,6 +2,8 @@
 
 name: CI
 
+permissions: read-all
+
 # Controls when the workflow will run
 on:
   # Triggers the workflow on push or pull request events but only for the "master" branch
@@ -16,7 +18,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # This workflow contains a single job called "build"
-  build:
+  check:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -35,21 +37,11 @@ jobs:
           skopeo list-tags docker://ghcr.io/windmill-labs/windmill | tee windmill-tags.json
           
       - name: Add changes to Git tracking
-        run: git add -A .
-
-      - name: Workspace Commit
-        # You may pin to the exact commit or the version.
-        # uses: gha-utilities/workspace-commit@c6bd2e34ef76c161faa65601136da13ac46d784f
-        uses: gha-utilities/workspace-commit@v0.0.3
-        with:
-          # Customize `user.name` that commit messages are authored by
-          author: robot
-          # Customize `user.email` that commit messages are authored by
-          email: robot@githubaction.com
-          # If assigned a value then `paths` Input is not required
-          all: true
-          # Multi-line commit message describing changes
-          message: Update windmill-tags.json
+        run: |
+          git add -A .
+          git config --global user.name "robot"
+          git config --global user.email "robot@github.com"
+          git commit -m "Update windmill-tags.json"
 
       - name: Push changes
         uses: ad-m/github-push-action@master
