@@ -1,6 +1,6 @@
-ARG WINDMILL_VERSION=main
+ARG WINDMILL_VERSION=ghcr.io/windmill-labs/windmill:main
 
-FROM ghcr.io/windmill-labs/windmill:$WINDMILL_VERSION
+FROM $WINDMILL_VERSION
 
 RUN wget https://get.helm.sh/helm-v3.10.1-linux-amd64.tar.gz && \
     tar -zxvf helm-v3.10.1-linux-amd64.tar.gz  && \
