@@ -1,137 +1,138 @@
 name: build
 
 on:
-    # Triggers the workflow on push or pull request events but only for the "master" branch
-    push:
-      branches: [ "master" ]
-    # Allows you to run this workflow manually from the Actions tab
-    workflow_dispatch:
+  # Triggers the workflow on push or pull request events but only for the "master" branch
+  push:
+    branches: ["master"]
+    paths:
+      - Docker/*
+      - windmill-tags.json
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
 
 permissions:
-    packages: write
+  packages: write
 
 jobs:
-    pre:
-        runs-on: ubuntu-latest
-        steps:
-            - name: Checkout
-              uses: actions/checkout@v3
-            - id: set-matrix
-              run: |
-                DOCKER_FILES=$(ls Docker | jq  --raw-input .  | jq --slurp -c .)
-                echo $DOCKER_FILES
-                echo "::set-output name=docker_files::$DOCKER_FILES"
-        outputs:
-            docker_files: ${{steps.set-matrix.outputs.docker_files}}
-    
-    build-ce:
-        needs: pre
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                docker_files: ${{fromJson(needs.pre.outputs.docker_files)}}
-        steps:
-            - run: |
-                echo ${{matrix.docker_files}}
-            - uses: actions/checkout@v3
+  pre:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - id: set-matrix
+        run: |
+          DOCKER_FILES=$(ls Docker | jq  --raw-input .  | jq --slurp -c .)
+          echo $DOCKER_FILES
+          echo "::set-output name=docker_files::$DOCKER_FILES"
+    outputs:
+      docker_files: ${{steps.set-matrix.outputs.docker_files}}
 
-            - name: Install skopeo
-              run: |
-                sudo apt-get -y update
-                sudo apt-get -y install skopeo
+  build-ce:
+    needs: pre
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        docker_files: ${{fromJson(needs.pre.outputs.docker_files)}}
+    steps:
+      - run: |
+          echo ${{matrix.docker_files}}
+      - uses: actions/checkout@v3
+      - name: Install skopeo
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install skopeo
 
-            - name: List Windmill Tags
-              run: |
-                skopeo list-tags docker://ghcr.io/windmill-labs/windmill
+      - name: List Windmill Tags
+        run: |
+          skopeo list-tags docker://ghcr.io/windmill-labs/windmill
 
-            - name: Get Windmill Version
-              id: windmill-version
-              run: |
-                echo "windmill_version=$(skopeo list-tags docker://ghcr.io/windmill-labs/windmill | jq -r '.Tags|last')" >> "$GITHUB_ENV"
-                echo "image_name=$(echo ${{matrix.docker_files}} | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
-                
-            - name: Check Env
-              run: |
-                echo ${{env.windmill_version}}
-                echo ${{env.image_name}}
+      - name: Get Windmill Version
+        id: windmill-version
+        run: |
+          echo "windmill_version=$(skopeo list-tags docker://ghcr.io/windmill-labs/windmill | jq -r '.Tags|last')" >> "$GITHUB_ENV"
+          echo "image_name=$(echo ${{matrix.docker_files}} | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
-            - name: Set up QEMU
-              uses: docker/setup-qemu-action@v2
+      - name: Check Env
+        run: |
+          echo ${{env.windmill_version}}
+          echo ${{env.image_name}}
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-            - name: Login to GitHub Container Registry
-              uses: docker/login-action@v2
-              with:
-                registry: ghcr.io
-                username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-            - name: Build and push
-              uses: docker/build-push-action@v4
-              with:
-                context: .
-                platforms: linux/amd64
-                push: true
-                file: Docker/${{matrix.docker_files}}
-                build-args: |
-                    WINDMILL_VERSION=ghcr.io/windmill-labs/windmill:${{env.windmill_version}}
-                tags: |
-                    ghcr.io/${{ github.repository_owner }}/windmill:ce-${{env.image_name}}-${{env.windmill_version}}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-    build-ee:
-        needs: pre
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                docker_files: ${{fromJson(needs.pre.outputs.docker_files)}}
-        steps:
-            - run: |
-                echo ${{matrix.docker_files}}
-            - uses: actions/checkout@v3
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          file: Docker/${{matrix.docker_files}}
+          build-args: |
+            WINDMILL_VERSION=ghcr.io/windmill-labs/windmill:${{env.windmill_version}}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/windmill:ce-${{env.image_name}}-${{env.windmill_version}}
 
-            - name: Install skopeo
-              run: |
-                sudo apt-get -y update
-                sudo apt-get -y install skopeo
+  build-ee:
+    needs: pre
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        docker_files: ${{fromJson(needs.pre.outputs.docker_files)}}
+    steps:
+      - run: |
+          echo ${{matrix.docker_files}}
+      - uses: actions/checkout@v3
+      - name: Install skopeo
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install skopeo
 
-            - name: List Windmill Tags
-              run: |
-                skopeo list-tags docker://ghcr.io/windmill-labs/windmill
+      - name: List Windmill Tags
+        run: |
+          skopeo list-tags docker://ghcr.io/windmill-labs/windmill
 
-            - name: Get Windmill Version
-              id: windmill-version
-              run: |
-                echo "windmill_version=$(skopeo list-tags docker://ghcr.io/windmill-labs/windmill | jq -r '.Tags|last')" >> "$GITHUB_ENV"
-                echo "image_name=$(echo ${{matrix.docker_files}} | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
-                
-            - name: Check Env
-              run: |
-                echo ${{env.windmill_version}}
-                echo ${{env.image_name}}
+      - name: Get Windmill Version
+        id: windmill-version
+        run: |
+          echo "windmill_version=$(skopeo list-tags docker://ghcr.io/windmill-labs/windmill | jq -r '.Tags|last')" >> "$GITHUB_ENV"
+          echo "image_name=$(echo ${{matrix.docker_files}} | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
-            - name: Set up QEMU
-              uses: docker/setup-qemu-action@v2
+      - name: Check Env
+        run: |
+          echo ${{env.windmill_version}}
+          echo ${{env.image_name}}
 
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v2
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
 
-            - name: Login to GitHub Container Registry
-              uses: docker/login-action@v2
-              with:
-                registry: ghcr.io
-                username: ${{ github.actor }}
-                password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-            - name: Build and push
-              uses: docker/build-push-action@v4
-              with:
-                context: .
-                platforms: linux/amd64
-                push: true
-                file: Docker/${{matrix.docker_files}}
-                build-args: |
-                    WINDMILL_VERSION=ghcr.io/windmill-labs/windmill-ee:${{env.windmill_version}}
-                tags: |
-                    ghcr.io/${{ github.repository_owner }}/windmill:ee-${{env.image_name}}-${{env.windmill_version}}
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          file: Docker/${{matrix.docker_files}}
+          build-args: |
+            WINDMILL_VERSION=ghcr.io/windmill-labs/windmill-ee:${{env.windmill_version}}
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/windmill:ee-${{env.image_name}}-${{env.windmill_version}}
