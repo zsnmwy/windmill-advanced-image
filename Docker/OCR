@@ -1,0 +1,26 @@
+ARG WINDMILL_VERSION=main
+
+FROM ghcr.io/windmill-labs/windmill:$WINDMILL_VERSION
+
+RUN echo ${WINDMILL_VERSION}
+
+RUN wget https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs10011/ghostscript-10.01.1.tar.gz && \
+    tar -zxvf ghostscript-10.01.1.tar.gz && \
+    cd ghostscript-10.01.1 && \
+    ./configure && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf ghostscript-10.01.1.tar.gz ghostscript-10.01.1
+
+RUN echo 'deb https://notesalexp.org/tesseract-ocr/buster/ buster main' >> /etc/apt/sources.list && \
+    wget -O - https://notesalexp.org/debian/alexp_key.asc | apt-key add - && \
+    apt-get update && \
+    apt install aptitude -y && \
+    apt-get install -y libcairo2-dev pkg-config python3-dev && \
+    aptitude install tesseract-ocr tesseract-ocr-chi-sim -y && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN /bin/sh -c /usr/local/bin/python3 -m pip install pycairo ocrmypdf
+
+CMD ["windmill"]

@@ -1,0 +1,52 @@
+name: ocr
+
+on:
+    # Triggers the workflow on push or pull request events but only for the "master" branch
+    push:
+      branches: [ "master" ]
+    # Allows you to run this workflow manually from the Actions tab
+    workflow_dispatch:
+
+jobs:
+    build:
+        runs-on:  ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Install skopeo
+              run: |
+                sudo apt-get -y update
+                sudo apt-get -y install skopeo
+
+            - name: List Windmill Tags
+              run: |
+                skopeo list-tags docker://ghcr.io/windmill-labs/windmill
+
+            - id: windmill-version
+              run: |
+                echo "::set-output name=windmill-version::$(skopeo list-tags docker://ghcr.io/windmill-labs/windmill | jq '.Tags|last')"
+
+            - name: Set up QEMU
+              uses: docker/setup-qemu-action@v2
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v2
+
+            - name: Login to GitHub Container Registry
+              uses: docker/login-action@v2
+              with:
+                registry: ghcr.io
+                username: ${{ github.actor }}
+                password: ${{ secrets.GITHUB_TOKEN }}
+
+            - name: Build and push
+              uses: docker/build-push-action@v4
+              with:
+                context: .
+                platforms: linux/amd64
+                push: true
+                file: Docker/OCR
+                build-args: |
+                    WINDMILL_VERSION=${{steps.windmill-version.outputs.windmill-version}}
+                tags: |
+                    ghcr.io/${{ github.repository_owner }}/windmill:ocr-${{steps.windmill-version.outputs.windmill-version}}
