@@ -18,7 +18,7 @@ jobs:
               uses: actions/checkout@v3
             - id: set-matrix
               run: |
-                DOCKER_FILES=$(ls Docker | tr '[:upper:]' '[:lower:]' | jq  --raw-input .  | jq --slurp -c .)
+                DOCKER_FILES=$(ls Docker | jq  --raw-input .  | jq --slurp -c .)
                 echo $DOCKER_FILES
                 echo "::set-output name=docker_files::$DOCKER_FILES"
         outputs:
@@ -48,6 +48,12 @@ jobs:
               id: windmill-version
               run: |
                 echo "windmill_version=$(skopeo list-tags docker://ghcr.io/windmill-labs/windmill | jq -r '.Tags|last')" >> "$GITHUB_ENV"
+                echo "image_name=$(echo ${{matrix.docker_files}} | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+                
+            - name: Check Env
+              run: |
+                echo ${{env.windmill_version}}
+                echo ${{env.image_name}}
 
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v2
@@ -68,11 +74,11 @@ jobs:
                 context: .
                 platforms: linux/amd64
                 push: true
-                file: Docker/Helm
+                file: Docker/${{matrix.docker_files}}
                 build-args: |
                     WINDMILL_VERSION=ghcr.io/windmill-labs/windmill:${{env.windmill_version}}
                 tags: |
-                    ghcr.io/${{ github.repository_owner }}/windmill:ce-${{matrix.docker_files}}-${{env.windmill_version}}
+                    ghcr.io/${{ github.repository_owner }}/windmill:ce-${{env.image_name}}-${{env.windmill_version}}
 
     build-ee:
         needs: pre
@@ -98,6 +104,12 @@ jobs:
               id: windmill-version
               run: |
                 echo "windmill_version=$(skopeo list-tags docker://ghcr.io/windmill-labs/windmill | jq -r '.Tags|last')" >> "$GITHUB_ENV"
+                echo "image_name=$(echo ${{matrix.docker_files}} | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+                
+            - name: Check Env
+              run: |
+                echo ${{env.windmill_version}}
+                echo ${{env.image_name}}
 
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v2
@@ -118,8 +130,8 @@ jobs:
                 context: .
                 platforms: linux/amd64
                 push: true
-                file: Docker/Helm
+                file: Docker/${{matrix.docker_files}}
                 build-args: |
                     WINDMILL_VERSION=ghcr.io/windmill-labs/windmill-ee:${{env.windmill_version}}
                 tags: |
-                    ghcr.io/${{ github.repository_owner }}/windmill:ee-${{matrix.docker_files}}-${{env.windmill_version}}
+                    ghcr.io/${{ github.repository_owner }}/windmill:ee-${{env.image_name}}-${{env.windmill_version}}
