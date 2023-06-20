@@ -27,8 +27,8 @@ jobs:
 
       - name: Install skopeo
         run: |
-          apt-get -y update
-          apt-get -y install skopeo
+          sudo apt-get -y update
+          sudo apt-get -y install skopeo
 
       - name: List Windmill Tags
         run: |
