@@ -21,14 +21,18 @@ jobs:
             - name: Setup matrix
               run: |
                 echo "docker_files=$(ls Docker  | jq  --raw-input .  | jq --slurp .)" >> "$GITHUB_ENV"
+            - id: set-matrix
+              run: |
+                echo "::set-output name=docker_files::$(ls Docker  | jq  --raw-input .  | jq --slurp .)"
+        outputs:
+            docker_files: ${{steps.set-matrix.outputs.docker_files}}
     
     test:
         needs: pre
         runs-on: ubuntu-latest
         strategy:
-            # ↓ the real magic happens here - create dynamic matrix from the json
             matrix:
-                docker_file: ${{ fromJson(env.docker_files) }}
+                docker_files: ${{fromJson(needs.pre.outputs.docker_files)}}
         steps:
             - run: |
-                echo ${{matrix.docker_file}}
+                echo ${{matrix.docker_files}}
