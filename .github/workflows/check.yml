@@ -6,6 +6,10 @@ permissions: write-all
 
 # Controls when the workflow will run
 on:
+  schedule:
+    # Runs "at minute 55 past every hour" (see https://crontab.guru)
+    - cron: '55 * * * *'
+    
   # Triggers the workflow on push or pull request events but only for the "master" branch
   push:
     branches: [ "master" ]
