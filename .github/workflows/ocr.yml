@@ -4,6 +4,8 @@ on:
     # Triggers the workflow on push or pull request events but only for the "master" branch
     push:
       branches: [ "master" ]
+      paths:
+        - windmill-tags.json
     # Allows you to run this workflow manually from the Actions tab
     workflow_dispatch:
 
@@ -24,7 +26,7 @@ jobs:
 
             - id: windmill-version
               run: |
-                echo "::set-output name=windmill-version::$(skopeo list-tags docker://ghcr.io/windmill-labs/windmill | jq '.Tags|last')"
+                echo "::set-output name=windmill-version::$(skopeo list-tags docker://ghcr.io/windmill-labs/windmill | jq -r '.Tags|last')"
 
             - name: Set up QEMU
               uses: docker/setup-qemu-action@v2
