@@ -4,6 +4,11 @@ FROM $WINDMILL_VERSION
 
 RUN echo ${WINDMILL_VERSION}
 
+RUN wget https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz && \
+    tar -xvf ffmpeg-master-latest-linux64-gpl.tar.xz -C /opt/ffmpeg && \
+    rm -rf ffmpeg-master-latest-linux64-gpl.tar.xz && \
+    /opt/ffmpeg/ffmpeg-master-latest-linux64-gpl/bin/ffmpeg -version
+
 RUN wget https://github.com/ArtifexSoftware/ghostpdl-downloads/releases/download/gs10011/ghostscript-10.01.1.tar.gz && \
     tar -zxvf ghostscript-10.01.1.tar.gz && \
     cd ghostscript-10.01.1 && \
@@ -22,5 +27,7 @@ RUN echo 'deb https://notesalexp.org/tesseract-ocr/buster/ buster main' >> /etc/
     rm -rf /var/lib/apt/lists/*
 
 RUN /bin/sh -c /usr/local/bin/python3 -m pip install pycairo ocrmypdf
+
+ENV PATH="${PATH}:/opt/ffmpeg/ffmpeg-master-latest-linux64-gpl/bin"
 
 CMD ["windmill"]
