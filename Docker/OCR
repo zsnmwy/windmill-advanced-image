@@ -4,7 +4,8 @@ FROM $WINDMILL_VERSION
 
 RUN echo ${WINDMILL_VERSION}
 
-RUN wget https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz && \
+RUN wget -nv https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-linux64-gpl.tar.xz && \
+    mkdir -p /opt/ffmpeg && \
     tar -xvf ffmpeg-master-latest-linux64-gpl.tar.xz -C /opt/ffmpeg && \
     rm -rf ffmpeg-master-latest-linux64-gpl.tar.xz && \
     /opt/ffmpeg/ffmpeg-master-latest-linux64-gpl/bin/ffmpeg -version
