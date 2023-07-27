@@ -23,7 +23,7 @@ RUN echo 'deb https://notesalexp.org/tesseract-ocr/buster/ buster main' >> /etc/
     wget -O - https://notesalexp.org/debian/alexp_key.asc | apt-key add - && \
     apt-get update && \
     apt install aptitude -y && \
-    apt-get install -y libcairo2-dev pkg-config python3-dev && \
+    apt-get install -y libcairo2-dev pkg-config python3-dev libcairo2-dev libjpeg-dev libpango1.0-dev libgif-dev build-essential g++ libgl1-mesa-dev xvfb libxi-dev libx11-dev && \
     aptitude install tesseract-ocr tesseract-ocr-chi-sim -y && \
     rm -rf /var/lib/apt/lists/*
 
