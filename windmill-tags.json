@@ -561,6 +561,8 @@
         "1.231",
         "dev",
         "gbouv-integration-tests",
-        "dev-ok"
+        "dev-ok",
+        "1.232.0",
+        "1.232"
     ]
 }
